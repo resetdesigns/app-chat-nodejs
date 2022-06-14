@@ -1,10 +1,10 @@
 const users = [];
+const rooms = [];
 
 const addUser = ({ id, username, room }) => {
 	// Clean the data
 	username = username.trim().toLowerCase();
 	room = room.trim().toLowerCase();
-
 	// Validate the data
 	if (!username || !room) {
 		return {
@@ -27,6 +27,11 @@ const addUser = ({ id, username, room }) => {
 	// Store user
 	const user = { id, username, room };
 	users.push(user);
+
+	// Store room
+	if (rooms.indexOf(room) === -1) {
+		rooms.push(room);
+	}
 	return { user };
 };
 
@@ -47,4 +52,15 @@ const getUsersInRoom = (room) => {
 	return users.filter((user) => user.room === room);
 };
 
-module.exports = { addUser, removeUser, getUser, getUsersInRoom };
+const getRooms = () => {
+	return rooms;
+};
+
+const removeRoom = (room) => {
+	const index = rooms.findIndex((room) => room === room);
+	if (index != -1) {
+		return rooms.splice(index, 1)[0];
+	}
+};
+
+module.exports = { addUser, removeUser, getUser, getUsersInRoom, getRooms, removeRoom };

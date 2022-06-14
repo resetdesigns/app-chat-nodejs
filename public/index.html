@@ -11,14 +11,63 @@
 		<div class="centered-form">
 			<div class="centered-form__box">
 				<h1>Join</h1>
-				<form action="/chat.html">
-					<label for="username">Display Name</label>
+				<form id="joinForm" action="/chat.html">
+					<p><label for="username">Display Name</label></p>
 					<input type="text" name="username" placeholder="Enter your display name" required />
-					<label for="room">Room</label>
-					<input type="text" name="room" placeholder="Enter the room" required />
+					<label for="existingRoom">Rooms</label></p>
+					<select name="existingRoom" id="existingRoom" disabled>
+						<option>Select a room</option>
+					</select>
+					<br />
+					<br />
+					<label for="room">Create A New Room</label></p>
+					<input type="text" name="room" id="room" placeholder="Enter new room name" />
 					<button>Join</button>
 				</form>
 			</div>
 		</div>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.1/mustache.min.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+			const socket = io();
+			socket.emit(
+				'load'
+			);
+
+			const $form = document.querySelector('#joinForm');
+			const $roomSelect = document.querySelector('select#existingRoom');
+			const $inputRoom = document.querySelector('#room');
+
+			socket.on('noRooms', () => {
+				const $noRoomsEle = document.createElement('p');
+				$noRoomsEle.innerText = 'No available rooms. Create one below.';
+				$roomSelect.parentNode.insertBefore($noRoomsEle, $roomSelect);
+			});
+
+			socket.on('loadRooms', (rooms) => {
+				rooms.forEach(ele => {
+					const option = document.createElement('option');
+					option.value = ele;
+					option.textContent = ele;
+					$roomSelect.appendChild(option);
+				});
+
+				$roomSelect.removeAttribute('disabled');
+			});
+
+			$form.addEventListener('submit', (e) => {
+				e.preventDefault();
+
+				if ($roomSelect.value !== 'Select a room') {
+					$inputRoom.removeAttribute('id');
+					$inputRoom.removeAttribute('name');
+					$roomSelect.setAttribute('id','room');
+					$roomSelect.setAttribute('name','room');
+				}
+
+				$form.submit();
+			});
+		</script>
 	</body>
 </html>
