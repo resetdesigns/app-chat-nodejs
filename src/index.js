@@ -4,7 +4,7 @@ const express = require('express');
 const socketio = require('socket.io');
 const Filter = require('bad-words');
 const { generateMessage, generateLocationMessage } = require('./utils/messages');
-const { addUser, removeUser, getUser, getUsersInRoom } = require('./utils/users');
+const { addUser, removeUser, getUser, getUsersInRoom, getRooms, removeRoom } = require('./utils/users');
 
 const app = express();
 const server = http.createServer(app);
@@ -16,6 +16,16 @@ const publicDirectoryPath = path.join(__dirname, '../public');
 app.use(express.static(publicDirectoryPath));
 
 io.on('connection', (socket) => {
+	socket.on('load', (callback) => {
+		const rooms = getRooms();
+
+		if (rooms.length === 0) {
+			socket.emit('noRooms', () => {});
+		} else {
+			socket.emit('loadRooms', getRooms());
+		}
+	});
+
 	socket.on('join', (options, callback) => {
 		const { error, user } = addUser({ id: socket.id, ...options });
 
@@ -70,6 +80,12 @@ io.on('connection', (socket) => {
 		if (user) {
 			io.to(user.room).emit('message', generateMessage('Admin', `${user.username} has left!`));
 
+			// check rooms and remove any with no users
+			if (getUsersInRoom(user.room).length === 0) {
+				removeRoom(user.room);
+			}
+
+			// send room data
 			io.to(user.room).emit('roomData', {
 				room: user.room,
 				users: getUsersInRoom(user.room),
